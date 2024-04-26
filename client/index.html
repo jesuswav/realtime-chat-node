@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat</title>
+
+    <script type="module">
+      import { io } from 'https://cdn.socket.io/4.7.5/socket.io.esm.min.js'
+
+      // crear conexión con el socket
+      const socket = io({
+        auth: {
+          token: '123',
+          username: 'jesuswav',
+          serverOffset: 0,
+        },
+      })
+
+      // Elementos dentro de los cuales renderizaremos
+      // y recuperaremos los valores necesarios para el chat
+      const form = document.getElementById('form')
+      const input = document.getElementById('input')
+      const messages = document.getElementById('messages')
+
+      // escuchar los mensajes que nos esta mandando el io
+      // por medio del socket
+      socket.on('chat message', (msg, serverOffset) => {
+        const item = `<li>${msg}</li>`
+        // insertar el mensaje dentro del HTML
+        messages.insertAdjacentHTML('beforeend', item)
+        socket.auth.serverOffset = serverOffset
+      })
+
+      // enviar el valor del formulario por medio del socket
+      form.addEventListener('submit', (e) => {
+        e.preventDefault()
+
+        if (input.value) {
+          socket.emit('chat message', input.value)
+          input.value = ''
+        }
+      })
+    </script>
+
+    <style>
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      :root {
+        color-scheme: light dark;
+      }
+
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+          Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue',
+          sans-serif;
+        display: grid;
+        place-content: center;
+        height: 90vh;
+        padding: 36px;
+        grid-template-rows: 1fr;
+      }
+
+      #messages {
+        list-style-type: none;
+        display: flex;
+        flex-direction: column;
+        justify-content: right;
+        align-items: end;
+        margin: 0;
+        padding: 0;
+      }
+
+      #messages > li {
+        width: fit-content;
+        margin: 10px;
+        padding: 0.5rem 1rem;
+      }
+
+      #messages > li:nth-child(odd) {
+        border-radius: 10px;
+        background: #353535;
+      }
+
+      #chat {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        overflow: hidden;
+        width: 350px;
+        position: relative;
+      }
+
+      #form {
+        bottom: 4px;
+        display: flex;
+        height: 48px;
+        left: 0px;
+        padding: 4px;
+        position: absolute;
+        right: 0px;
+      }
+
+      #input {
+        border-radius: 9999px;
+        border: 1px solid #eee;
+        flex: 1;
+        margin: 0px 4px 0px 4px;
+        padding: 0 8px;
+      }
+
+      #input:focus {
+        outline: 0;
+      }
+
+      #form > button {
+        background-color: #09f;
+        color: #fff;
+        border: 0;
+        margin: 4px;
+        border-radius: 12px;
+      }
+      #form > button:hover {
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <section id="chat">
+      <ul id="messages"></ul>
+      <form id="form">
+        <input
+          type="text"
+          name="message"
+          id="input"
+          placeholder="Type a message"
+          autocomplete="off"
+        />
+        <button type="submit">Enviar</button>
+      </form>
+    </section>
+  </body>
+</html>
