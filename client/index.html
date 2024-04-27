@@ -8,11 +8,25 @@
     <script type="module">
       import { io } from 'https://cdn.socket.io/4.7.5/socket.io.esm.min.js'
 
+      // obtener usuario de la base de datos
+      const getUsername = async () => {
+        const username = localStorage.getItem('username')
+        if (username) {
+          return username
+        }
+
+        const res = await fetch(
+          'https://random-data-api.com/api/users/random_user'
+        )
+        const { username: randomUsername } = await res.json()
+        localStorage.setItem('username', randomUsername)
+        return randomUsername
+      }
+
       // crear conexión con el socket
       const socket = io({
         auth: {
-          token: '123',
-          username: 'jesuswav',
+          username: await getUsername(),
           serverOffset: 0,
         },
       })
@@ -25,11 +39,27 @@
 
       // escuchar los mensajes que nos esta mandando el io
       // por medio del socket
-      socket.on('chat message', (msg, serverOffset) => {
-        const item = `<li>${msg}</li>`
+      socket.on('chat message', async (msg, serverOffset, username) => {
+        const authorized = username === (await getUsername())
+        const item = `<li class="${authorized ? 'right' : 'left'}" >
+            <div>
+              <p>${msg}</p>
+              <small>${username}</small>
+            </div>
+          </li>`
         // insertar el mensaje dentro del HTML
         messages.insertAdjacentHTML('beforeend', item)
+
+        // // definir lado de el mensaje
+        // var messageItem = document.querySelector('.item')
+        // console.log(messageItem)
+        // // console.log(username)
+        // if ((username = await getUsername())) {
+        //   item.classList.add('right')
+        // }
         socket.auth.serverOffset = serverOffset
+        // scroll to bottom of messages
+        messages.scrollTop = messages.scrollHeight
       })
 
       // enviar el valor del formulario por medio del socket
@@ -70,28 +100,73 @@
         display: flex;
         flex-direction: column;
         justify-content: right;
-        align-items: end;
         margin: 0;
         padding: 0;
+        overflow: auto;
+        height: 100%;
+        scroll-behavior: smooth;
       }
 
+      #messages::-webkit-scrollbar {
+        width: 0;
+        height: 0;
+      }
+      /* 
       #messages > li {
+        display: flex;
+        flex-direction: column;
+        width: 95%;
+      } */
+      .right {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        align-items: end;
+      }
+      .left {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        align-items: start;
+      }
+
+      .right > div {
+        background: #4b4b4b;
+      }
+      .left > div {
+        /* background: #007548; */
+        background-color: rgba(0, 153, 255, 0.822);
+      }
+
+      #messages > li > div {
+        display: flex;
+        flex-direction: column;
         width: fit-content;
+        align-items: end;
         margin: 10px;
         padding: 0.5rem 1rem;
+        border-radius: 12px;
+      }
+      #messages > li > div > p {
+        padding: 0;
+        margin: 0;
+      }
+      #messages > li > div > small {
+        color: rgb(187, 187, 187);
       }
 
-      #messages > li:nth-child(odd) {
+      /* #messages > li:nth-child(odd) {
         border-radius: 10px;
         background: #353535;
-      }
+      } */
 
       #chat {
         border: 1px solid #ccc;
-        border-radius: 4px;
+        border-radius: 28px;
         overflow: hidden;
         width: 350px;
         position: relative;
+        padding-bottom: 58px;
       }
 
       #form {
